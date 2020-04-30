@@ -6,10 +6,10 @@ permalink: index.html  # Is the only page that don't follow the partner /:path/i
 <p align="center"><b>Organisers</b>: Tom Papatheodore (ORNL), Maciej Cytowski (PawseySC), Chris Daley (LBL)</p>
 
 OpenACC and OpenMP are often seen as competing solutions for directive-based GPU offloading. Both models allow the programmer to offload computational workloads to run on GPUs and to manage data transfers between CPU and GPU memories. OpenACC is said to be a descriptive approach to programming GPUs, where the programmer uses directives to tell the compiler where data-independent loops are located and lets the compiler decide how/where to parallelize the loops based on the architecture (via compiler flags). OpenMP, on the other hand, is said to be a prescriptive approach to GPU programming, where the programmer uses directives to more explicitly tell the compiler how/where to parallelize the loops, instead of letting the compiler decide.
- 
-It’s common to hear programmers ask, “*which programming model should I use?*”, “*which approach is more portable?*”, “*are one of these models going to replace the other?*”, etc. 
-<p align="center"><b>In this tutorial, we will not attempt to argue for one programming model over the other or specifically try to compare their performance profiles.</b></p> 
-Instead, we will elaborate on the differences between the two approaches briefly outlined above and give participants the opportunity to explore how these differences manifest themselves in a program during hands-on exercises. We will also give a current snapshot of the compiler implementations available for the OpenACC and OpenMP (offload) specifications.
+
+It’s common to hear programmers ask, “*which programming model should I use?*”, “*which approach is more portable?*”, “*are one of these models going to replace the other?*”, etc.
+<p align="center"><b>In this tutorial, we will not attempt to argue for one programming model over the other or specifically try to compare their performance profiles. Instead, we will explore the differences between the two approaches briefly outlined above and give participants the opportunity to explore how these differences manifest themselves when implementing a program during hands-on exercises.</b></p>
+We will also give a current snapshot of the compiler implementations  available for OpenACC and OpenMP(GPU). This “*developer view*” of exploring the programming models is intended to give participants a foundation of information to help guide them in choosing which model works best for their application.
 
 > ## Prerequisites
 >
