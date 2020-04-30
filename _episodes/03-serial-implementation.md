@@ -12,6 +12,11 @@ keypoints:
 ---
 
 # Serial implementation
+
+> ## Where to start?
+> This episode starts in *1_serial/* directory. Decide if you want to work on OpenACC, OpenMP or both and follow the instructions below.  
+{: .callout}
+
 ## Code structure
 ### Data structures
 The number of grid nodes in each direction of the 2D grid is defined at the top of the file as:

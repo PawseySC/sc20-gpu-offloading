@@ -15,6 +15,10 @@ keypoints:
 
 # Data management
 
+> ## Where to start?
+> This episode starts in *4_data/* directory. Decide if you want to work on OpenACC, OpenMP or both and follow the instructions below.  
+{: .callout}
+
 Non-optimal memory management (e.g. excessive memory transfers) can heavily impact the performance of any GPU accelerated code. Therefore it is very important to understand how memory is being mapped and copied between host and device.  
 
 When using PGI compiler for OpenACC this can be achieved by using **-Minfo=accel** compiler option. The information about memory transfers will be printed to stdout.
@@ -41,7 +45,7 @@ main:
 
 As can be seen from the above report arrays **T** and **T_new** are being copied multiple times in and out between host and device. This copying occurs in every iteration of the algorithm.
 
-> ## Note 
+> ## Note
 > We should acknowledge the importance of *-Minfo=accel* compiler feedback option of the PGI compiler for OpenACC. GCC and Clang does not provide similar functionality for OpenMP
 {: .callout}
 
@@ -115,7 +119,7 @@ Although we claim that we have significantly reduced the number of data transfer
 
 ### Default scalar mapping
 
-> ## Note 
+> ## Note
 > Scalar variables are treated slightly differently in OpenACC and OpenMP GPU regions.
 {: .callout}
 

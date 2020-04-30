@@ -14,6 +14,10 @@ keypoints:
 
 # Profiling
 
+> ## Where to start?
+> This episode starts in *2_profiling/* directory. Decide if you want to work on OpenACC, OpenMP or both and follow the instructions below.  
+{: .callout}
+
 In this section we will use the GNU Gprof performance analysis tool to profile our Laplace code.
 
 First, the code needs to be compiled with *-pg* and *-g* options. This will enable the generation of line-by-line profiling information for gprof.

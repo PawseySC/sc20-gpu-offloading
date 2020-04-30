@@ -14,6 +14,10 @@ keypoints:
 
 # Loop parallelisation
 
+> ## Where to start?
+> This episode starts in *3_loops/* directory. Decide if you want to work on OpenACC, OpenMP or both and follow the instructions below.  
+{: .callout}
+
 In this section we will apply basic OpenACC and OpenMP directives to parallelise loop nests identified as the most computationally expensive in the previous profiling step.
 
 Loop parallelisation directives can be placed right before each of the loop nests in the code. There is a difference on how this can be achieved in OpenACC and OpenMP.

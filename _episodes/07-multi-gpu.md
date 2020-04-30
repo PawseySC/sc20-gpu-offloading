@@ -5,10 +5,10 @@ exercises: 30
 questions:
 - "Extra: implementing multi-GPU parallelisation"
 objectives:
-- "Using OpenMP"
-- "Apply data transfer OpenACC and OpenMP directives to improve the performance of the code"
-- "Understand differences between memory models"
+- "Use OpenMP to create mutliple CPU threads"
+- "Use OpenACC and OpenMP API functions to assign threads to devices"
+- "Use update directives to synchronise halo-exchange boundaries"
 keypoints:
-- "We have successfully and significantly reduced the total number of memory transfers"
-- "We have significantly increased the performance of both GPU implementations"
+- "We have learned how to parallelise OpenACC and OpenMP applications on multiple GPUs within the node"
+- "We are now able to create codes that use all computational devices available in the node"
 ---
