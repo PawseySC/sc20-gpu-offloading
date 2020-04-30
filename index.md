@@ -13,6 +13,6 @@ Instead, we will elaborate on the differences between the two approaches briefly
 
 > ## Prerequisites
 >
-> Participants are expected to be familiar with GPU architecture, the concept of offloading computations to accelerators and one of the two discussed programming models (OpenMP or OpenACC). Participants should be familiar with C/C++ or Fortran programming language.
+> Participants are expected to be familiar with GPU architecture and the concept of offloading computations to accelerators. Participants should be familiar with C/C++ or Fortran programming language.
 > Participants are required to bring their own laptops with SSH client for the hands-on session. Participants will be provided with access to the HPC platform.
 {: .prereq}
