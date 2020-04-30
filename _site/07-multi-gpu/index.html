@@ -20,7 +20,7 @@
 	<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 	<![endif]-->
-    <title>Differences between OpenACC and OpenMP offloading models: Contributor Code of Conduct</title>
+    <title>Differences between OpenACC and OpenMP offloading models: Multi-GPU Implementation</title>
   </head>
   <body>
     <div class="container">
@@ -101,7 +101,7 @@
 	
         <li><a href="../LICENSE.html">License</a></li>
 <!--	
-	<li><a href="/edit/gh-pages/CONDUCT.md">Improve this page <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></a></li>
+	<li><a href="/edit/gh-pages/_episodes/07-multi-gpu.md">Improve this page <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></a></li>
 	
 --> 
       </ul>
@@ -115,48 +115,119 @@
 </nav>
 
 
-<h1 class="maintitle"><a href="../index.html">Differences between OpenACC and OpenMP offloading models</a>: Contributor Code of Conduct</h1>
+<div class="row">
+  <div class="col-xs-1">
+    <h3 class="text-left">
+      
+      <a href="../06-data-management/index.html"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">previous episode</span></a>
+      
+    </h3>
+  </div>
+  <div class="col-xs-10">
+    
+    <h3 class="maintitle"><a href="../">Differences between OpenACC and OpenMP offloading models</a></h3>
+    
+  </div>
+  <div class="col-xs-1">
+    <h3 class="text-right">
+      
+      <a href="../"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><span class="sr-only">lesson home</span></a>
+      
+    </h3>
+  </div>
+</div>
 
-<p>As contributors and maintainers of this project,
-we pledge to respect all people who contribute through reporting issues,
-posting feature requests,
-updating documentation,
-submitting pull requests or patches,
-and other activities.</p>
+<article>
+<div class="row">
+  <div class="col-md-1">
+  </div>
+  <div class="col-md-10">
+    <h1 class="maintitle">Multi-GPU Implementation</h1>
+  </div>
+  <div class="col-md-1">
+  </div>
+</div>
 
-<p>We are committed to making participation in this project a harassment-free experience for everyone,
-regardless of level of experience,
-gender,
-gender identity and expression,
-sexual orientation,
-disability,
-personal appearance,
-body size,
-race,
-ethnicity,
-age,
-or religion.</p>
 
-<p>Examples of unacceptable behavior by participants include the use of sexual language or imagery,
-derogatory comments or personal attacks,
-trolling,
-public or private harassment,
-insults,
-or other unprofessional conduct.</p>
+<blockquote class="objectives">
+  <h2>Overview</h2>
 
-<p>Project maintainers have the right and responsibility to remove, edit, or reject
-comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to our <a href="https://software-carpentry.org/conduct/">Code of Conduct</a>.
-Project maintainers who do not follow the Code of Conduct may be removed from the project team.</p>
+  <div class="row">
+    <div class="col-md-3">
+      <strong>Teaching:</strong> 45 min
+      <br/>
+      <strong>Exercises:</strong> 30 min
+    </div>
+    <div class="col-md-9">
+      <strong>Questions</strong>
+      <ul>
+	
+	<li><p>Extra: implementing multi-GPU parallelisation</p>
+</li>
+	
+      </ul>
+    </div>
+  </div>
 
-<p>Instances of abusive, harassing, or otherwise unacceptable behavior
-may be reported by following our <a href="https://software-carpentry.org/CoC-reporting/">reporting guidelines</a>.</p>
+  <div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-9">
+      <strong>Objectives</strong>
+      <ul>
+	
+	<li><p>Use OpenMP to create mutliple CPU threads</p>
+</li>
+	
+	<li><p>Use OpenACC and OpenMP API functions to assign threads to devices</p>
+</li>
+	
+	<li><p>Use update directives to synchronise halo-exchange boundaries</p>
+</li>
+	
+      </ul>
+    </div>
+  </div>
 
-<ul>
-  <li><a href="https://software-carpentry.org/conduct/">Software and Data Carpentry Code of Conduct</a></li>
-  <li><a href="https://software-carpentry.org/CoC-reporting/">Code of Conduct Reporting Guide</a></li>
-</ul>
+</blockquote>
 
+
+
+
+<blockquote class="keypoints">
+  <h2>Key Points</h2>
+  <ul>
+    
+    <li><p>We have learned how to parallelise OpenACC and OpenMP applications on multiple GPUs within the node</p>
+</li>
+    
+    <li><p>We are now able to create codes that use all computational devices available in the node</p>
+</li>
+    
+  </ul>
+</blockquote>
+
+</article>
+
+<div class="row">
+  <div class="col-xs-1">
+    <h3 class="text-left">
+      
+      <a href="../06-data-management/index.html"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">previous episode</span></a>
+      
+    </h3>
+  </div>
+  <div class="col-xs-10">
+    
+  </div>
+  <div class="col-xs-1">
+    <h3 class="text-right">
+      
+      <a href="../"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><span class="sr-only">lesson home</span></a>
+      
+    </h3>
+  </div>
+</div>
 
 
       
