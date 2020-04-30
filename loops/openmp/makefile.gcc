@@ -1,0 +1,14 @@
+CC=gcc
+CFLAGS=-O3 -fopenmp
+LIBS=
+OBJ=laplace_mp.o
+TARGET=laplace_mp
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $^
+
+clean:
+	rm -f $(TARGET) *.o
