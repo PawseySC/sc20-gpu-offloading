@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="last-modified" content="2020-04-30 18:20:36 +0800">
+    <meta http-equiv="last-modified" content="2020-04-30 18:58:29 +0800">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- meta "search-domain" used for google site search function google_search() -->
     <meta name="search-domain" value="">
@@ -20,7 +20,7 @@
 	<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
 	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 	<![endif]-->
-    <title>Differences between OpenACC and OpenMP offloading models: Multi-GPU Implementation</title>
+    <title>Differences between OpenACC and OpenMP offloading models: Multi-GPU implementation</title>
   </head>
   <body>
     <div class="container">
@@ -69,7 +69,7 @@
             
             <li><a href="../06-data-management/index.html">Data management</a></li>
             
-            <li><a href="../07-multi-gpu/index.html">Multi-GPU Implementation</a></li>
+            <li><a href="../07-multi-gpu/index.html">Multi-GPU implementation</a></li>
             
 <!--	    <li role="separator" class="divider"></li>
             <li><a href="../aio.html">All in one page (Beta)</a></li>
@@ -142,7 +142,7 @@
   <div class="col-md-1">
   </div>
   <div class="col-md-10">
-    <h1 class="maintitle">Multi-GPU Implementation</h1>
+    <h1 class="maintitle">Multi-GPU implementation</h1>
   </div>
   <div class="col-md-1">
   </div>
@@ -191,7 +191,76 @@
 
 </blockquote>
 
+<h1 id="mutli-gpu-implementation">Mutli-GPU implementation</h1>
 
+<blockquote class="callout">
+  <h2 id="where-to-start">Where to start?</h2>
+  <p>This episode starts in <em>5_single-gpu/</em> directory. Decide if you want to work on OpenACC, OpenMP or both and follow the instructions below.</p>
+</blockquote>
+
+<h2 id="strategies">Strategies</h2>
+<p>GPU-accelerated HPC systems are usually based on multi-GPU nodes. This means that in order to take advantage of the full computational power of the node we need to parallelise our application across multiple GPUs within the node. There are at least two strategies to achieve this:</p>
+<ul>
+  <li>use MPI to create multiple processes and assign processes to GPUs,</li>
+  <li>use multithreading programming model (e.g. OpenMP) and assign threads to GPUs.</li>
+</ul>
+
+<p>In this episode we will use OpenMP to generate multiple threads and assign threads to GPUs. Each of the threads will be assigned to its unique GPU.</p>
+
+<p>The computational nature of the Laplace equation solver will require synchronisation on the boundaries of domains assigned to various GPUs.</p>
+
+<h2 id="multithreading-and-thread-gpu-affinity">Multithreading and thread-GPU affinity</h2>
+
+<p>We will start by creating OpenMP parallel region around the <em>while</em> loop. We will set the default data type to be <em>shared</em>.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#pragma omp parallel default(shared) firstprivate(...)
+</span><span class="p">{</span>
+  <span class="p">...</span>
+  <span class="k">while</span> <span class="p">(</span> <span class="n">dt</span> <span class="o">&gt;</span> <span class="n">MAX_TEMP_ERROR</span> <span class="o">&amp;&amp;</span> <span class="n">iteration</span> <span class="o">&lt;=</span> <span class="n">max_iterations</span> <span class="p">)</span> <span class="p">{</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Now that we have created multiple threads, we will create affinity between threads and GPUs. For this we will use OpenMP and OpenACC API query functions.</p>
+
+<p>For this to work we must first include appropriate header files:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;openacc.h&gt;
+#include &lt;omp.h&gt;
+</span></code></pre></div></div>
+
+<p>First, we will query for the number of available threads and set a thread ID.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">num_threads</span> <span class="o">=</span> <span class="n">omp_get_num_threads</span><span class="p">();</span>
+  <span class="n">thread_id</span>  <span class="o">=</span> <span class="n">omp_get_thread_num</span><span class="p">();</span>
+</code></pre></div></div>
+
+<p>Next, we will query for the number of devices and compute the GPU device ID for each thread by taking thread ID module number of available GPU devices.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">num_devices</span> <span class="o">=</span> <span class="n">acc_get_num_devices</span><span class="p">(</span><span class="n">acc_device_nvidia</span><span class="p">);</span>
+  <span class="n">device_id</span>  <span class="o">=</span> <span class="n">thread_id</span> <span class="o">%</span> <span class="n">num_devices</span><span class="p">;</span>
+  <span class="n">acc_set_device_num</span><span class="p">(</span><span class="n">device_id</span><span class="p">,</span> <span class="n">acc_device_nvidia</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>Finally, we can assign thread to GPU with the use of language specific function. Please note that this will look differently for OpenACC and OpenMP:</p>
+<ul>
+  <li>OpenACC
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">acc_set_device_num</span><span class="p">(</span><span class="n">device_id</span><span class="p">,</span> <span class="n">acc_device_nvidia</span><span class="p">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>OpenMP
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">omp_set_default_device</span><span class="p">(</span><span class="n">device_id</span><span class="p">);</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>Please note that we have used new integer variables: <em>num_threads, thread_id, num_devices, device_id</em>.</p>
+
+<p>Those need to be defined earlier in the code:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">num_threads</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>				 <span class="c1">// number of OpenMP threads</span>
+<span class="kt">int</span> <span class="n">thread_id</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>				 	 <span class="c1">// thread ID</span>
+<span class="kt">int</span> <span class="n">num_devices</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>				 <span class="c1">// number of GPU devices</span>
+<span class="kt">int</span> <span class="n">device_id</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>					 <span class="c1">// device ID</span>
+</code></pre></div></div>
+<p>and also declared as firstprivate variables.</p>
 
 
 <blockquote class="keypoints">
