@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="last-modified" content="2020-04-28 23:16:43 +0800">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- meta "search-domain" used for google site search function google_search() -->
+    <meta name="search-domain" value="">
+    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/lesson.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/syntax.css" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon-swc.ico" />
+    
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+    <title>Differences between OpenACC and OpenMP offloading models: Data management</title>
+  </head>
+  <body>
+    <div class="container">
+      
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+
+      
+      
+
+      
+      <a class="navbar-brand" href="../index.html">Home</a>
+
+    </div>
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+
+	
+        <li><a href="../conduct/">Code of Conduct</a></li>
+
+        
+	
+        <li><a href="../setup.html">Setup</a></li>
+
+        
+        <li class="dropdown">
+          <a href="../" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Episodes <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            
+            <li><a href="../01-talks/index.html">Talks</a></li>
+            
+            <li><a href="../02-laplace-introduction/index.html">Introduction to Laplace Equation</a></li>
+            
+            <li><a href="../03-serial-implementation/index.html">Serial Implementation</a></li>
+            
+            <li><a href="../04-profiling/index.html">Profiling</a></li>
+            
+            <li><a href="../05-loop-parallelisation/index.html">Loop parallelisation</a></li>
+            
+            <li><a href="../06-data-management/index.html">Data management</a></li>
+            
+<!--	    <li role="separator" class="divider"></li>
+            <li><a href="../aio.html">All in one page (Beta)</a></li>
+-->
+          </ul>
+        </li>
+	
+<!--
+	
+	
+        <li class="dropdown">
+          <a href="../" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Extras <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="../reference.html">Reference</a></li>
+            
+            <li><a href="../about/index.html">About</a></li>
+            
+            <li><a href="../discuss/index.html">Discussion</a></li>
+            
+            <li><a href="../figures/index.html">Figures</a></li>
+            
+            <li><a href="../guide/index.html">Instructor Notes</a></li>
+            
+          </ul>
+        </li>
+	
+-->
+
+	
+        <li><a href="../LICENSE.html">License</a></li>
+<!--	
+	<li><a href="/edit/gh-pages/_episodes/06-data-management.md">Improve this page <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></a></li>
+	
+--> 
+      </ul>
+      <form class="navbar-form navbar-right" role="search" id="search" onsubmit="google_search(); return false;">
+        <div class="form-group">
+          <input type="text" id="google-search" placeholder="Search..." aria-label="Google site search">
+        </div>
+      </form>
+    </div>
+  </div>
+</nav>
+
+
+<div class="row">
+  <div class="col-xs-1">
+    <h3 class="text-left">
+      
+      <a href="../05-loop-parallelisation/index.html"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">previous episode</span></a>
+      
+    </h3>
+  </div>
+  <div class="col-xs-10">
+    
+    <h3 class="maintitle"><a href="../">Differences between OpenACC and OpenMP offloading models</a></h3>
+    
+  </div>
+  <div class="col-xs-1">
+    <h3 class="text-right">
+      
+      <a href="../"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><span class="sr-only">lesson home</span></a>
+      
+    </h3>
+  </div>
+</div>
+
+<article>
+<div class="row">
+  <div class="col-md-1">
+  </div>
+  <div class="col-md-10">
+    <h1 class="maintitle">Data management</h1>
+  </div>
+  <div class="col-md-1">
+  </div>
+</div>
+
+
+<blockquote class="objectives">
+  <h2>Overview</h2>
+
+  <div class="row">
+    <div class="col-md-3">
+      <strong>Teaching:</strong> 15 min
+      <br/>
+      <strong>Exercises:</strong> 15 min
+    </div>
+    <div class="col-md-9">
+      <strong>Questions</strong>
+      <ul>
+	
+	<li><p>Usage of OpenACC and OpenMP data mapping directives</p>
+</li>
+	
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-9">
+      <strong>Objectives</strong>
+      <ul>
+	
+	<li><p>Perform basic profiling of GPU events</p>
+</li>
+	
+	<li><p>Apply data transfer OpenACC and OpenMP directives to improve the performance of the code</p>
+</li>
+	
+	<li><p>Understand differences between memory models</p>
+</li>
+	
+      </ul>
+    </div>
+  </div>
+
+</blockquote>
+
+<h1 id="data-management">Data management</h1>
+
+<p>Non-optimal memory management (e.g. excessive memory transfers) can heavily impact the performance of any GPU accelerated code. Therefore it is very important to understand how memory is being mapped and copied between host and device.</p>
+
+<p>When using PGI compiler for OpenACC this can be achieved by using <strong>-Minfo=accel</strong> compiler option. The information about memory transfers will be printed to stdout.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pgcc</span> <span class="o">-</span><span class="n">O3</span> <span class="o">-</span><span class="n">acc</span> <span class="o">-</span><span class="n">Minfo</span><span class="o">=</span><span class="n">accel</span> <span class="o">-</span><span class="n">c</span> <span class="o">-</span><span class="n">o</span> <span class="n">laplace_acc</span><span class="p">.</span><span class="n">o</span> <span class="n">laplace_acc</span><span class="p">.</span><span class="n">c</span>
+<span class="n">main</span><span class="o">:</span>
+     <span class="mi">43</span><span class="p">,</span> <span class="n">Generating</span> <span class="n">implicit</span> <span class="n">copyin</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="o">:</span><span class="p">][</span><span class="o">:</span><span class="p">])</span> <span class="p">[</span><span class="k">if</span> <span class="n">not</span> <span class="n">already</span> <span class="n">present</span><span class="p">]</span>
+         <span class="n">Generating</span> <span class="n">implicit</span> <span class="n">copyout</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">2048</span><span class="p">][</span><span class="mi">1</span><span class="o">:</span><span class="mi">2048</span><span class="p">])</span> <span class="p">[</span><span class="k">if</span> <span class="n">not</span> <span class="n">already</span> <span class="n">present</span><span class="p">]</span>
+     <span class="mi">44</span><span class="p">,</span> <span class="n">Loop</span> <span class="n">is</span> <span class="n">parallelizable</span>
+     <span class="mi">45</span><span class="p">,</span> <span class="n">Loop</span> <span class="n">is</span> <span class="n">parallelizable</span>
+         <span class="n">Generating</span> <span class="n">Tesla</span> <span class="n">code</span>
+         <span class="mi">44</span><span class="p">,</span> <span class="err">#</span><span class="n">pragma</span> <span class="n">acc</span> <span class="n">loop</span> <span class="n">gang</span><span class="p">,</span> <span class="n">vector</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="cm">/* blockIdx.y threadIdx.y */</span>
+         <span class="mi">45</span><span class="p">,</span> <span class="err">#</span><span class="n">pragma</span> <span class="n">acc</span> <span class="n">loop</span> <span class="n">gang</span><span class="p">,</span> <span class="n">vector</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="cm">/* blockIdx.x threadIdx.x */</span>
+     <span class="mi">53</span><span class="p">,</span> <span class="n">Generating</span> <span class="n">implicit</span> <span class="n">copyin</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">2048</span><span class="p">][</span><span class="mi">1</span><span class="o">:</span><span class="mi">2048</span><span class="p">])</span> <span class="p">[</span><span class="k">if</span> <span class="n">not</span> <span class="n">already</span> <span class="n">present</span><span class="p">]</span>
+         <span class="n">Generating</span> <span class="n">implicit</span> <span class="n">copy</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">2048</span><span class="p">][</span><span class="mi">1</span><span class="o">:</span><span class="mi">2048</span><span class="p">])</span> <span class="p">[</span><span class="k">if</span> <span class="n">not</span> <span class="n">already</span> <span class="n">present</span><span class="p">]</span>
+     <span class="mi">54</span><span class="p">,</span> <span class="n">Loop</span> <span class="n">is</span> <span class="n">parallelizable</span>
+     <span class="mi">55</span><span class="p">,</span> <span class="n">Loop</span> <span class="n">is</span> <span class="n">parallelizable</span>
+         <span class="n">Generating</span> <span class="n">Tesla</span> <span class="n">code</span>
+         <span class="mi">54</span><span class="p">,</span> <span class="err">#</span><span class="n">pragma</span> <span class="n">acc</span> <span class="n">loop</span> <span class="n">gang</span><span class="p">,</span> <span class="n">vector</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="cm">/* blockIdx.y threadIdx.y */</span>
+         <span class="mi">55</span><span class="p">,</span> <span class="err">#</span><span class="n">pragma</span> <span class="n">acc</span> <span class="n">loop</span> <span class="n">gang</span><span class="p">,</span> <span class="n">vector</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="cm">/* blockIdx.x threadIdx.x */</span>
+         <span class="mi">56</span><span class="p">,</span> <span class="n">Generating</span> <span class="n">implicit</span> <span class="n">reduction</span><span class="p">(</span><span class="n">max</span><span class="o">:</span><span class="n">dt</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>As can be seen from the above report arrays <strong>T</strong> and <strong>T_new</strong> are being copied multiple times in and out between host and device. This copying occurs in every iteration of the algorithm.</p>
+
+<blockquote class="callout">
+  <h2 id="note">Note</h2>
+  <p>We should acknowledge the importance of <em>-Minfo=accel</em> compiler feedback option of the PGI compiler for OpenACC. GCC and Clang does not provide similar functionality for OpenMP</p>
+</blockquote>
+
+<p>The impact of memory transfers on the current performance of the GPU kernel can be also measured by e.g. <em>nvprof</em> profiler by running:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.2<span class="nv">$ </span>srun <span class="nt">-u</span> <span class="nt">-n</span> 1 nvprof ./laplace_mp 4000
+</code></pre></div></div>
+
+<p>As can be seen from the report generated below for the OpenMP version of the code, memory transfers represent more than 98% of the runtime (HtoD stands for Host to Device, DtoH stands from Device to Host).</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>==228979== Profiling application: ./laplace_mp 4000
+==228979== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   51.25%  60.3494s     11236  5.3711ms  1.1520us  9.4626ms  [CUDA memcpy HtoD]
+                   47.73%  56.2051s     11237  5.0018ms  1.4080us  10.967ms  [CUDA memcpy DtoH]
+                    0.84%  987.39ms      2247  439.43us  430.30us  463.33us  __omp_offloading_47c4f666_4f0059e6_main_l56
+                    0.18%  217.23ms      2247  96.677us  95.583us  98.144us  __omp_offloading_47c4f666_4f0059e6_main_l45
+</code></pre></div></div>
+
+<h2 id="analysing-data-transfers">Analysing data transfers</h2>
+
+<p>As we’ve seen memory transfers can take significant amount of time if scheduled improperly. In the case of the Laplace example <strong>T</strong> and <strong>T_new</strong> arrays are being copied multiple times in every iteration of the algorithm. More precisely, in each iteration of the algorithm we have:</p>
+<ul>
+  <li><em>T</em> is being copied in to the device memory (<em>copyin</em>) before the first loop nest and copied in and out of the device memory for the second loop nest (<em>copy</em>),</li>
+  <li><em>T_new</em> is being copied out of the device memory (<em>copyout</em>) after the first loop nest and copied in the device memory before the second loop nest (<em>copyin</em>).</li>
+</ul>
+
+<p>This gives us 5 data transfers of a 33.5 MB buffer  per iteration and <strong>11,000</strong> data transfers for the entire run. However if we analyse data accesses in the implementation, we can clearly see that there is no need for this, we don’t need any results on the host until after the while loop exits. We will try to fix it by using OpenACC and OpenMP compiler directives to indicate when and which data transfers should occur.</p>
+
+<p>In both cases this is fairly simple. For OpenACC we place <em>acc data</em> directive right before the <em>while</em> loop:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#pragma acc data copy(T), create(T_new)
+</span><span class="k">while</span> <span class="p">(</span> <span class="n">dt</span> <span class="o">&gt;</span> <span class="n">MAX_TEMP_ERROR</span> <span class="o">&amp;&amp;</span> <span class="n">iteration</span> <span class="o">&lt;=</span> <span class="n">max_iterations</span> <span class="p">)</span> <span class="p">{</span>
+</code></pre></div></div>
+<p>We can achieve the same for OpenMP with the use of <em>omp target data</em> directive placed right before the <em>while</em> loop:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#pragma omp target data map(tofrom:T) map(alloc:T_new)
+</span><span class="k">while</span> <span class="p">(</span> <span class="n">dt</span> <span class="o">&gt;</span> <span class="n">MAX_TEMP_ERROR</span> <span class="o">&amp;&amp;</span> <span class="n">iteration</span> <span class="o">&lt;=</span> <span class="n">max_iterations</span> <span class="p">)</span> <span class="p">{</span>
+</code></pre></div></div>
+
+<p>There is actually a one to one mapping between OpenACC and OpenMP data transfer constructs.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>OpenACC construct</th>
+      <th>OpenMP construct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>copyin(A)</td>
+      <td>map(to:A)</td>
+    </tr>
+    <tr>
+      <td>copyout(A)</td>
+      <td>map(from:A)</td>
+    </tr>
+    <tr>
+      <td>copy(A)</td>
+      <td>map(tofrom:A)</td>
+    </tr>
+    <tr>
+      <td>create(A)</td>
+      <td>map(alloc:A)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Let’s run the <em>nvprof</em> profiling again on the OpenMP version.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash-4.2<span class="nv">$ </span>srun <span class="nt">-u</span> <span class="nt">-n</span> 1 nvprof ./laplace_mp 4000
+</code></pre></div></div>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>==301161== Profiling application: ./laplace_mp 4000
+==301161== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   80.95%  1.00671s      2247  448.03us  434.78us  458.08us  __omp_offloading_47c4f666_6901a48d_main_l56
+                   16.88%  209.86ms      2247  93.396us  92.415us  95.551us  __omp_offloading_47c4f666_6901a48d_main_l45
+                    1.36%  16.877ms      2250  7.5000us  1.2160us  13.957ms  [CUDA memcpy DtoH]
+                    0.81%  10.120ms      2249  4.4990us  1.2790us  7.1050ms  [CUDA memcpy HtoD]
+</code></pre></div></div>
+<p>What we notice is that the code runs much faster now and as can be seen from the profiler information the memory transfers are taking only small fraction of runtime. GPU kernels represent around 98% of the runtime.</p>
+
+<p><strong>We have successfully and significantly reduced the total number of memory transfers of the large <em>T</em> and <em>T_new</em> arrays: from 11,000 transfers to only 2 transfers per run.</strong></p>
+
+<h2 id="key-differences">Key differences</h2>
+
+<p>Although we claim that we have significantly reduced the number of data transfers, the <em>nvprof</em> report is still indicating that there was around 2250<em>2 data transfers. Those transfers are related to the use of *dt</em> in the second loop nest. This scalar variable needs to be copied in and out in every iteration of the algorithm. As mentioned before, there is a small difference on how the <em>dt</em> variable is declared in OpenACC and OpenMP versions of the code. In the case of OpenMP we need to be more prescriptive and specify the type of data transfers for the <em>dt</em> variable. This is related to differences in how scalar variables are treated in <em>kernels</em> and <em>target</em> constructs.</p>
+
+<h3 id="default-scalar-mapping">Default scalar mapping</h3>
+
+<blockquote class="callout">
+  <h2 id="note-1">Note</h2>
+  <p>Scalar variables are treated slightly differently in OpenACC and OpenMP GPU regions.</p>
+</blockquote>
+
+<p>In OpenMP a scalar variable that is not explicitly mapped is implicitly mapped as <em>firstprivate</em>, although this behaviour can be changed with the use of <em>defaultmap(tofrom:scalar)</em> clause.</p>
+
+<p>In OpenACC a scalar variables that is not explicitly mapped (copied) will be treated:</p>
+<ul>
+  <li>as <em>firstprivate</em> in the parallel construct,</li>
+  <li>as if it appeared in <em>copy</em> clause in the kernels construct.</li>
+</ul>
+
+<p>This is why in the OpenMP implementation we need to explicitly map the <em>dt</em> variable which occurs in the <em>reduction</em> clause.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// compute the largest change and copy T_new to T</span>
+<span class="cp">#pragma omp target map(dt)
+#pragma omp teams distribute parallel for collapse(2) reduction(max:dt)
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">GRIDX</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">){</span>
+      <span class="n">dt</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span> <span class="n">fabs</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]),</span> <span class="n">dt</span><span class="p">);</span>
+      <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Please be aware that similar data mapping would need to be explicitly provided if we would decide to implement OpenACC version of the code with more prescriptive <em>parallel</em> construct instead of <em>kernels</em> construct.</p>
+
+
+<blockquote class="keypoints">
+  <h2>Key Points</h2>
+  <ul>
+    
+    <li><p>We have successfully and significantly reduced the total number of memory transfers</p>
+</li>
+    
+    <li><p>We have significantly increased the performance of both GPU implementations</p>
+</li>
+    
+  </ul>
+</blockquote>
+
+</article>
+
+<div class="row">
+  <div class="col-xs-1">
+    <h3 class="text-left">
+      
+      <a href="../05-loop-parallelisation/index.html"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">previous episode</span></a>
+      
+    </h3>
+  </div>
+  <div class="col-xs-10">
+    
+  </div>
+  <div class="col-xs-1">
+    <h3 class="text-right">
+      
+      <a href="../"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span><span class="sr-only">lesson home</span></a>
+      
+    </h3>
+  </div>
+</div>
+
+
+      
+      	
+<footer>
+  <div class="row">
+    <div class="col-md-6" align="left">
+      <h4>
+	Copyright &copy; 2016–2020
+	<a href="http://pawsey.org.au">Pawsey Supercomputing Centre</a>
+
+      </h4>
+    </div>
+    <div class="col-md-6" align="right">
+      <h4>
+
+	Adapted from <a href="http://software-carpentry.org">Software Carpentry</a>
+	/
+	<a href="mailto:mailto:help@pawsey.org.au">Contact</a>
+      </h4>
+    </div>
+  </div>
+</footer>
+
+      
+    </div>
+    
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/bootstrap.min.js"></script>
+<script src="../assets/js/lesson.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-37305346-2', 'auto');
+  ga('send', 'pageview');
+</script>
+
+  </body>
+</html>

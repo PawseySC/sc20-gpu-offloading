@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="last-modified" content="2020-04-28 23:16:43 +0800">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- meta "search-domain" used for google site search function google_search() -->
+    <meta name="search-domain" value="">
+    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/lesson.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/syntax.css" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon-swc.ico" />
+    
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+	<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+    <title>Differences between OpenACC and OpenMP offloading models: Loop parallelisation</title>
+  </head>
+  <body>
+    <div class="container">
+      
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+
+      
+      
+
+      
+      <a class="navbar-brand" href="../index.html">Home</a>
+
+    </div>
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+
+	
+        <li><a href="../conduct/">Code of Conduct</a></li>
+
+        
+	
+        <li><a href="../setup.html">Setup</a></li>
+
+        
+        <li class="dropdown">
+          <a href="../" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Episodes <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            
+            <li><a href="../01-talks/index.html">Talks</a></li>
+            
+            <li><a href="../02-laplace-introduction/index.html">Introduction to Laplace Equation</a></li>
+            
+            <li><a href="../03-serial-implementation/index.html">Serial Implementation</a></li>
+            
+            <li><a href="../04-profiling/index.html">Profiling</a></li>
+            
+            <li><a href="../05-loop-parallelisation/index.html">Loop parallelisation</a></li>
+            
+            <li><a href="../06-data-management/index.html">Data management</a></li>
+            
+<!--	    <li role="separator" class="divider"></li>
+            <li><a href="../aio.html">All in one page (Beta)</a></li>
+-->
+          </ul>
+        </li>
+	
+<!--
+	
+	
+        <li class="dropdown">
+          <a href="../" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Extras <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="../reference.html">Reference</a></li>
+            
+            <li><a href="../about/index.html">About</a></li>
+            
+            <li><a href="../discuss/index.html">Discussion</a></li>
+            
+            <li><a href="../figures/index.html">Figures</a></li>
+            
+            <li><a href="../guide/index.html">Instructor Notes</a></li>
+            
+          </ul>
+        </li>
+	
+-->
+
+	
+        <li><a href="../LICENSE.html">License</a></li>
+<!--	
+	<li><a href="/edit/gh-pages/_episodes/05-loop-parallelisation.md">Improve this page <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span></a></li>
+	
+--> 
+      </ul>
+      <form class="navbar-form navbar-right" role="search" id="search" onsubmit="google_search(); return false;">
+        <div class="form-group">
+          <input type="text" id="google-search" placeholder="Search..." aria-label="Google site search">
+        </div>
+      </form>
+    </div>
+  </div>
+</nav>
+
+
+<div class="row">
+  <div class="col-xs-1">
+    <h3 class="text-left">
+      
+      <a href="../04-profiling/index.html"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">previous episode</span></a>
+      
+    </h3>
+  </div>
+  <div class="col-xs-10">
+    
+    <h3 class="maintitle"><a href="../">Differences between OpenACC and OpenMP offloading models</a></h3>
+    
+  </div>
+  <div class="col-xs-1">
+    <h3 class="text-right">
+      
+      <a href="../06-data-management/index.html"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span><span class="sr-only">next episode</span></a>
+      
+    </h3>
+  </div>
+</div>
+
+<article>
+<div class="row">
+  <div class="col-md-1">
+  </div>
+  <div class="col-md-10">
+    <h1 class="maintitle">Loop parallelisation</h1>
+  </div>
+  <div class="col-md-1">
+  </div>
+</div>
+
+
+<blockquote class="objectives">
+  <h2>Overview</h2>
+
+  <div class="row">
+    <div class="col-md-3">
+      <strong>Teaching:</strong> 15 min
+      <br/>
+      <strong>Exercises:</strong> 15 min
+    </div>
+    <div class="col-md-9">
+      <strong>Questions</strong>
+      <ul>
+	
+	<li><p>Basic OpenACC and OpenMP directives to parallelise loop nests</p>
+</li>
+	
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-9">
+      <strong>Objectives</strong>
+      <ul>
+	
+	<li><p>Apply basic directives to parallelise loops</p>
+</li>
+	
+	<li><p>Understand differences between OpenACC and OpenMP approaches</p>
+</li>
+	
+      </ul>
+    </div>
+  </div>
+
+</blockquote>
+
+<h1 id="loop-parallelisation">Loop parallelisation</h1>
+
+<p>In this section we will apply basic OpenACC and OpenMP directives to parallelise loop nests identified as the most computationally expensive in the previous profiling step.</p>
+
+<p>Loop parallelisation directives can be placed right before each of the loop nests in the code. There is a difference on how this can be achieved in OpenACC and OpenMP.</p>
+
+<h2 id="openacc">OpenACC</h2>
+<p>With OpenACC programmers will usually start the parallelisation by placing the following <em>kernels</em> directive right before the first <em>for</em> loop.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#pragma acc kernels
+</span></code></pre></div></div>
+<p>This directive instructs the compiler to generate parallel accelerator kernels for the loop (or loops) following the directive.</p>
+
+<p>This is what we will refer to as <em>descriptive approach</em> to programming GPUs, where the programmer uses directives to tell the compiler where data-independent loops are located and lets the compiler decide how/where to parallelise the loops based on the architecture.</p>
+
+<p>In the case of our Laplace example the <em>kernels</em> directive can be applied as follows:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// main computational kernel, average over neighbours in the grid</span>
+<span class="cp">#pragma acc kernels
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">GRIDX</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">25</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span>
+                                    <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]);</span>
+
+<span class="c1">// reset dt</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c1">// compute the largest change and copy T_new to T</span>
+<span class="cp">#pragma acc kernels
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">GRIDX</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">){</span>
+      <span class="n">dt</span> <span class="o">=</span> <span class="n">fmax</span><span class="p">(</span> <span class="n">fabs</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]),</span> <span class="n">dt</span><span class="p">);</span>
+      <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Please note that the <em>kernels</em> directive will:</p>
+<ul>
+  <li>create/destroy data environment on device(s),</li>
+  <li>map data between host and device(s) data environment,</li>
+  <li>attempt to parallelise loops for execution on the device,</li>
+  <li>offload successfully parallelise loops to the target device(s),</li>
+  <li>automatically update the data between the host and device(s).</li>
+</ul>
+
+<h3 id="important-notes">Important notes</h3>
+<ol>
+  <li>If you are very perceptive, you might have noticed that we are cheating a little bit. We have changed
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="n">dt</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span> <span class="n">fabs</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]),</span> <span class="n">dt</span><span class="p">);</span>
+</code></pre></div>    </div>
+    <p>to</p>
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="n">dt</span> <span class="o">=</span> <span class="n">fmax</span><span class="p">(</span> <span class="n">fabs</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]),</span> <span class="n">dt</span><span class="p">);</span>
+</code></pre></div>    </div>
+    <p>to allow the use of <em>fmax</em> intrinsic supported by the PGI compiler. This significantly improves the performance of the code.</p>
+  </li>
+  <li>If we analyse the parallel nature of the second loop nest, we can actually notice that there is a <strong>reduction operation</strong> that needs to be performed on <em>dt</em> variable. In this case, OpenACC can detect it automatically and apply appropriate data synchronisation technique.</li>
+</ol>
+
+<h2 id="openmp">OpenMP</h2>
+
+<p>Similarly, with OpenMP we will start by inserting directives right before the first <em>for</em> loop of the loop nests. We will start by inserting the <em>target</em> directive, which will (for each of the structure-blocks):</p>
+<ul>
+  <li>create/destroy data environment on device(s),</li>
+  <li>map data between host and device(s) data environment,</li>
+  <li>offloads OpenMP target regions (structured-block) to target device(s),</li>
+  <li>automatically update the data between the host and device(s).
+Please note that compared to the OpenACC’s <em>kernels</em> directive, the <em>target</em> directive will not attempt to parallelise the underlying loop nests. For this to happen, we will need to be more <strong>prescriptive</strong> to specify what we want to achieve.</li>
+</ul>
+
+<p>To achieve proper parallelisation across available GPU threads we will use two following OpenMP constructs:</p>
+<ul>
+  <li><em>teams</em>, which creates a league of thread teams with the master thread of each team executing the region,</li>
+  <li><em>distribute parallel for</em>, which specifies a loop that can be executed in parallel by multiple threads that are members of multiple teams.</li>
+</ul>
+
+<p>In the case of our Laplace example those directives can be applied as follows:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// main computational kernel, average over neighbours in the grid</span>
+<span class="cp">#pragma omp target
+#pragma omp teams distribute parallel for collapse(2)
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">GRIDX</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">25</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span>
+                                    <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]);</span>
+
+<span class="c1">// reset dt</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c1">// compute the largest change and copy T_new to T</span>
+<span class="cp">#pragma omp target map(dt)
+#pragma omp teams distribute parallel for collapse(2) reduction(max:dt)
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">GRIDX</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">){</span>
+      <span class="n">dt</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span> <span class="n">fabs</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]),</span> <span class="n">dt</span><span class="p">);</span>
+      <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h3 id="important-notes-1">Important notes</h3>
+<ol>
+  <li>In the case of the second loop nest we are also specifying that there is a reduction on <em>dt</em> variable by adding <em>reduction(max:dt)</em> clause,</li>
+  <li>We are also manually specifying that variable <em>dt</em> needs to be mapped between host and device data environments. Although this will be discussed in the next step of the tutorial, for now we should just keep in mind that in OpenMP scalar variables that are not explicitly mapped are implicitly mapped as <strong>firstprivate</strong>.</li>
+</ol>
+
+<h2 id="comments-and-further-analysis">Comments and further analysis</h2>
+
+<p>Note, that in both cases we were not required to change the structure of the code to achieve GPU parallelisation. Although the Laplace example used in this tutorial gives us a space to explore various OpenACC and OpenMP directives and options, this is still a very simple program. In general cases, GPU parallelisation might require code restructure, regardless of which of the two programming paradigms is used.</p>
+
+<p><strong>TBD</strong> To put things another way: the kernels construct may be thought of as a hint to the compiler of where it should look for parallelism while the parallel directive is an assertion to the compiler of where there is parallelism.</p>
+
+<blockquote class="callout">
+  <h2 id="key-comments">KEY COMMENTS</h2>
+  <ol>
+    <li>This is usually not the last step of GPU programming with directives. Deep analysis of data transfers will be done in next step. It is also important not to rely on automatic parallelisation techniques but to understand how different parameters (like block and vector sizes) might  impact the final performance.</li>
+    <li>It is really hard to judge which approach (descriptive vs prescriptive) is better. On the one hand we would like the compiler to take care of optimisations as much as possible. On the other hand programmers <strong>must</strong> have a clear understanding on what transformations were made to their code. <strong>We claim that creating a highly optimised GPU code requires a very similar effort in both OpenACC and OpenMP approaches</strong>.</li>
+  </ol>
+</blockquote>
+
+
+<blockquote class="keypoints">
+  <h2>Key Points</h2>
+  <ul>
+    
+    <li><p>We have explored differences between OpenACC and OpenMP loop constructs for GPU parallelisation</p>
+</li>
+    
+    <li><p>We have an understanding of the difference between descriptive and prescriptive approach to GPU programming</p>
+</li>
+    
+  </ul>
+</blockquote>
+
+</article>
+
+<div class="row">
+  <div class="col-xs-1">
+    <h3 class="text-left">
+      
+      <a href="../04-profiling/index.html"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span><span class="sr-only">previous episode</span></a>
+      
+    </h3>
+  </div>
+  <div class="col-xs-10">
+    
+  </div>
+  <div class="col-xs-1">
+    <h3 class="text-right">
+      
+      <a href="../06-data-management/index.html"><span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span><span class="sr-only">next episode</span></a>
+      
+    </h3>
+  </div>
+</div>
+
+
+      
+      	
+<footer>
+  <div class="row">
+    <div class="col-md-6" align="left">
+      <h4>
+	Copyright &copy; 2016–2020
+	<a href="http://pawsey.org.au">Pawsey Supercomputing Centre</a>
+
+      </h4>
+    </div>
+    <div class="col-md-6" align="right">
+      <h4>
+
+	Adapted from <a href="http://software-carpentry.org">Software Carpentry</a>
+	/
+	<a href="mailto:mailto:help@pawsey.org.au">Contact</a>
+      </h4>
+    </div>
+  </div>
+</footer>
+
+      
+    </div>
+    
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/bootstrap.min.js"></script>
+<script src="../assets/js/lesson.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-37305346-2', 'auto');
+  ga('send', 'pageview');
+</script>
+
+  </body>
+</html>
