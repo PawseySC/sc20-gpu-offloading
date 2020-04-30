@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
 
         #pragma omp target update from(T[i_start:1][1:GRIDY])
         #pragma omp target update from(T[i_end:1][1:GRIDY])
+        #pragma omp barrier
         #pragma omp target update to(T[(i_start-1):1][1:GRIDY])
         #pragma omp target update to(T[(i_end+1):1][1:GRIDY])
 

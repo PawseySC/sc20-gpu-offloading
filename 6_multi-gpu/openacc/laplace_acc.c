@@ -74,6 +74,7 @@ int main(int argc, char *argv[]) {
                                             T[i][j+1] + T[i][j-1]);
 
         #pragma acc update self(T[i_start:1][1:GRIDY],T[i_end:1][1:GRIDY])
+        #pragma omp barrier
         #pragma acc update device(T[(i_start-1):1][1:GRIDY],T[(i_end+1):1][1:GRIDY])
 
         // reset dt
