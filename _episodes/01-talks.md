@@ -1,6 +1,6 @@
 ---
 title: "Talks"
-teaching: 80
+teaching: 90
 exercises: 0
 questions:
 - "Overview of directives and GPU offloading models available in OpenACC and OpenMP"
@@ -14,6 +14,12 @@ objectives:
 ---
 
 # Talks
+
+### Welcome and Introduction
+
+**Presenter**: Tutorial Organisers
+
+**Duration**: 5 minutes
 
 ### Directive-based GPU offloading - current status and future
 
@@ -29,4 +35,4 @@ objectives:
 
 ### HPC system access and introduction
 
-**Duration**: 20 minutes
+**Duration**: 25 minutes
