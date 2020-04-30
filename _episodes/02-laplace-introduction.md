@@ -44,7 +44,7 @@ In fact, this computational approach of iterative kernels which update array ele
 
 ### Initial and boundary conditions
 
-The use of Finite Difference Methods and the resulting iterative alorithm implies that:
+The use of Finite Difference Methods and the resulting iterative algorithm implies that:
 * the initial condition (initial values for each grid node) need to be provided as an input to the algorithm,
 * the boundary condition for cells on the boundaries of the 2D domain need to be provided as an input to the algorithm.
 
