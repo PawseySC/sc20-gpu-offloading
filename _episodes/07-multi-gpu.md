@@ -220,3 +220,7 @@ We also make sure that diagnostic messages are printed by only a single thread (
 if((iteration % 100) == 0)
     printf("Iteration %4.0d, dt %f\n",iteration,dt);
 ```
+
+> ## Note
+> The size of the grid should be significantly increased to measure scalability across multiple GPUs. We proposed to use 8192x8192 grid size.
+{: .callout}
