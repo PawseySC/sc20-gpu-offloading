@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="last-modified" content="2020-04-30 18:58:29 +0800">
+    <meta http-equiv="last-modified" content="2020-04-30 20:03:31 +0800">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- meta "search-domain" used for google site search function google_search() -->
     <meta name="search-domain" value="">
@@ -207,6 +207,8 @@
 
 <p>This is what we will refer to as <em>descriptive approach</em> to programming GPUs, where the programmer uses directives to tell the compiler where data-independent loops are located and lets the compiler decide how/where to parallelise the loops based on the architecture.</p>
 
+<p>In other words: the kernels construct is a hint for the compiler of where it should look for parallelisation opportunities.</p>
+
 <p>In the case of our Laplace example the <em>kernels</em> directive can be applied as follows:</p>
 <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// main computational kernel, average over neighbours in the grid</span>
 <span class="cp">#pragma acc kernels
@@ -297,8 +299,6 @@ Please note that compared to the OpenACC’s <em>kernels</em> directive, the <em
 <h2 id="comments-and-further-analysis">Comments and further analysis</h2>
 
 <p>Note, that in both cases we were not required to change the structure of the code to achieve GPU parallelisation. Although the Laplace example used in this tutorial gives us a space to explore various OpenACC and OpenMP directives and options, this is still a very simple program. In general cases, GPU parallelisation might require code restructure, regardless of which of the two programming paradigms is used.</p>
-
-<p><strong>TBD</strong> To put things another way: the kernels construct may be thought of as a hint to the compiler of where it should look for parallelism while the parallel directive is an assertion to the compiler of where there is parallelism.</p>
 
 <blockquote class="callout">
   <h2 id="key-comments">KEY COMMENTS</h2>

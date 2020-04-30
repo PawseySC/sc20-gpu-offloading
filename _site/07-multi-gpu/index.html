@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="last-modified" content="2020-04-30 18:58:29 +0800">
+    <meta http-equiv="last-modified" content="2020-04-30 20:03:31 +0800">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- meta "search-domain" used for google site search function google_search() -->
     <meta name="search-domain" value="">
@@ -255,12 +255,148 @@
 <p>Please note that we have used new integer variables: <em>num_threads, thread_id, num_devices, device_id</em>.</p>
 
 <p>Those need to be defined earlier in the code:</p>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">num_threads</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>				 <span class="c1">// number of OpenMP threads</span>
-<span class="kt">int</span> <span class="n">thread_id</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>				 	 <span class="c1">// thread ID</span>
-<span class="kt">int</span> <span class="n">num_devices</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>				 <span class="c1">// number of GPU devices</span>
-<span class="kt">int</span> <span class="n">device_id</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>					 <span class="c1">// device ID</span>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">num_threads</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>				 
+<span class="kt">int</span> <span class="n">thread_id</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>				 	 
+<span class="kt">int</span> <span class="n">num_devices</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>				 
+<span class="kt">int</span> <span class="n">device_id</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>					 
 </code></pre></div></div>
-<p>and also declared as firstprivate variables.</p>
+<p>and also declared as <strong>firstprivate</strong> variables.</p>
+
+<h2 id="domain-decomposition">Domain decomposition</h2>
+
+<p>Parallelisation strategy and proper algorithm design is one the most important steps for achieving high computational performance. In the case of our Laplace example we will simply divide the problem into <em>num_threads</em> chunks (stripes) by dividing the grid in X dimension. For this we need to:</p>
+<ul>
+  <li>compute the size of the chunk for each thread:
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// calculate the chunk size based on number of threads</span>
+<span class="n">chunk_size</span><span class="o">=</span><span class="n">ceil</span><span class="p">((</span><span class="mi">1</span><span class="p">.</span><span class="mi">0</span><span class="o">*</span><span class="n">GRIDX</span><span class="p">)</span><span class="o">/</span><span class="n">num_threads</span><span class="p">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>calculate X direction loop bounds for each thread:
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// calculate boundaries and process only inner region</span>
+<span class="n">i_start</span> <span class="o">=</span> <span class="n">thread_id</span> <span class="o">*</span> <span class="n">chunk_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">i_end</span>   <span class="o">=</span> <span class="n">i_start</span> <span class="o">+</span> <span class="n">chunk_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div>    </div>
+    <p>Please note that all those variable need to be defined earlier as well as declared as <strong>firstprivate</strong>.</p>
+  </li>
+</ul>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">chunk_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>					 
+<span class="kt">int</span> <span class="n">i_start</span><span class="p">,</span> <span class="n">i_end</span><span class="p">;</span>					
+</code></pre></div></div>
+
+<p>We can now change both i-loops to iterate within the precomputed boundaries:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">i_start</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">i_end</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+</code></pre></div></div>
+
+<blockquote class="callout">
+  <h2 id="caution">Caution</h2>
+  <p>There is one very important component missing: halo-exchange. Left-hand side and right-hand side boundaries of each stripe (chunk) need to be synchronised with other threads. Please continue reading to learn how that can be achieved with OpenACC and OpenMP.</p>
+</blockquote>
+
+<h2 id="firstprivate-variables">Firstprivate variables</h2>
+
+<p>We have set the CPU default OpenMP data type to <em>shared</em>. For this reason we need to be very careful with identifying variables that need to be treated as private of firstprivate within the OpenMP parallel region.</p>
+
+<p>Clearly, arrays <em>T</em> and <em>T_new</em> should be treated as shared. Those arrays can be potentially very big in size and each thread will be working on a separate stripe/chunk.</p>
+
+<p>We have also noted before that <em>num_threads, thread_id, num_devices, device_id, chunk_size, i_start</em> and <em>i_end</em> variables need to be treated as firstprivate.</p>
+
+<p>In addition to this, variables <em>dt, iteration, i</em> and <em>j</em> need to be treated as firstprivate as well.</p>
+
+<p>Therefore, the opening of the OpenMP parallel region should be of the following form:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#pragma omp parallel default(shared) firstprivate(num_threads, thread_id, num_devices, device_id, i_start, i_end, chunk_size,dt,iteration,i,j)
+</span></code></pre></div></div>
+
+<h2 id="halo-exchange">Halo-exchange</h2>
+
+<p>There is one very important component missing: halo-exchange. Left-hand side and right-hand side boundaries of each stripe (chunk) need to be synchronised with other threads. Please continue reading to learn how that can be achieved with OpenACC and OpenMP. This is related to the computational nature of the Laplace equation solver. Value for each grid node is computed as an average of its 4 neighbours.</p>
+
+<p>It is even more complicated since GPU threads are operating on a local copy of <em>T</em> and <em>T_new</em> arrays which were transferred to the GPU memory.</p>
+
+<blockquote class="callout">
+  <h2 id="question">Question</h2>
+  <p>Do we need to transfer the whole <em>T</em> and <em>T_new</em> arrays back to CPU memory to achieve the synchronisation? We have already seen that copying whole arrays back and forth is a significant overhead.</p>
+</blockquote>
+
+<p>Fortunately, both OpenMP and OpenACC provide us with <em>update</em> directives which can be used to transfer only single rows or columns of 2D arrays. Therefore, each thread will:</p>
+<ul>
+  <li>first copy its stripe (chunk) boundaries back to CPU memory,</li>
+  <li>next copy neighbouring thread boundaries from CPU memory to GPU memory.
+We will place those two events right after the main computational kernel in the code.</li>
+</ul>
+
+<p>Please note that we had to introduce an additional OpenMP barrier between those two events. We need to be sure that boundaries of neighbouring threads are already available in the CPU memory.</p>
+
+<p>This can be implemented in the following way for OpenACC:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// main computational kernel, average over neighbours in the grid</span>
+<span class="cp">#pragma acc kernels
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">i_start</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">i_end</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">25</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span>
+                                    <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]);</span>
+
+<span class="cp">#pragma acc update self(T[i_start:1][1:GRIDY],T[i_end:1][1:GRIDY])
+#pragma omp barrier
+#pragma acc update device(T[(i_start-1):1][1:GRIDY],T[(i_end+1):1][1:GRIDY])
+</span></code></pre></div></div>
+<p>Similarly, for OpenMP:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// main computational kernel, average over neighbours in the grid</span>
+<span class="cp">#pragma omp target
+#pragma omp teams distribute parallel for collapse(2)
+</span><span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">i_start</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">i_end</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">25</span> <span class="o">*</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span>
+                                    <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">]);</span>
+
+<span class="cp">#pragma omp target update from(T[i_start:1][1:GRIDY])
+#pragma omp target update from(T[i_end:1][1:GRIDY])
+#pragma omp barrier
+#pragma omp target update to(T[(i_start-1):1][1:GRIDY])
+#pragma omp target update to(T[(i_end+1):1][1:GRIDY])
+</span></code></pre></div></div>
+
+<h2 id="synchronisation">Synchronisation</h2>
+
+<p>Every thread is now able to compute correct result in each iteration, however we do not have proper synchronisation for the <em>dt</em> variable which is used to determine if the iterative algorithm converged. For that reason we will create a shared <em>dt_global</em> variable to compute global largest change of temperature.</p>
+
+<p>This can be achieved in the following way:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// reset dt</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+<span class="cp">#pragma omp single
+</span><span class="n">dt_global</span> <span class="o">=</span> <span class="mi">0</span><span class="p">.</span><span class="mi">0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp barrier
+</span>
+<span class="c1">// compute the largest change and copy T_new to T</span>
+<span class="cm">/*
+OpenACC or OpenMP loop construct
+*/</span>
+<span class="k">for</span><span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">i_start</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">i_end</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">GRIDY</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">){</span>
+<span class="n">dt</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span> <span class="n">fabs</span><span class="p">(</span><span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">-</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]),</span> <span class="n">dt</span><span class="p">);</span>
+<span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">T_new</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cp">#pragma omp critical
+</span><span class="n">dt_global</span> <span class="o">=</span> <span class="n">MAX</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span><span class="n">dt_global</span><span class="p">);</span>
+
+<span class="cp">#pragma omp barrier
+</span>
+<span class="n">dt</span><span class="o">=</span><span class="n">dt_global</span><span class="p">;</span>
+</code></pre></div></div>
+<p>Local <em>dt</em> is first set to zero. One of the OpenMP threads is also setting <em>dt_global</em> to zero, this is followed by OpenMP barrier for proper synchronisation.</p>
+
+<p>After computing local <em>dt</em>, each thread updates <em>dt_global</em>. This needs to be done in the OpenMP critical region to make sure that each thread’s value is taken into account. Work is synchronised with the use of OpenMP barrier to make sure that contribution from all threads were calculated. Finally, each thread copies <em>dt_global</em> value to local <em>dt</em>.</p>
+
+<h2 id="diagnostic-messages">Diagnostic messages</h2>
+<p>We also make sure that diagnostic messages are printed by only a single thread (in that case by the master thread).</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// periodically print largest change</span>
+<span class="cp">#pragma omp master
+</span><span class="k">if</span><span class="p">((</span><span class="n">iteration</span> <span class="o">%</span> <span class="mi">100</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Iteration %4.0d, dt %f</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">iteration</span><span class="p">,</span><span class="n">dt</span><span class="p">);</span>
+</code></pre></div></div>
 
 
 <blockquote class="keypoints">
