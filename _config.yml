@@ -6,7 +6,7 @@
 carpentry: "swc"
 
 # Overall title for pages.
-title: "Differences between OpenACC and OpenMP offloading models"
+title: "Exploring Differences Between Directive-Based GPU-Programming Models"
 
 # Contact.  This *must* include the protocol: if it's an email
 # address, it must look like "mailto:lessons@software-carpentry.org",
