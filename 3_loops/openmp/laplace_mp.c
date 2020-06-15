@@ -38,12 +38,9 @@ int main(int argc, char *argv[]) {
     init();                  
 
     // simulation iterations
-    #pragma omp target data map(tofrom:T) map(alloc:T_new)
     while ( dt > MAX_TEMP_ERROR && iteration <= max_iterations ) {
 
         // main computational kernel, average over neighbours in the grid
-        #pragma omp target
-        #pragma omp teams distribute parallel for collapse(2)
         for(i = 1; i <= GRIDX; i++) 
             for(j = 1; j <= GRIDY; j++) 
                 T_new[i][j] = 0.25 * (T[i+1][j] + T[i-1][j] +
@@ -53,8 +50,6 @@ int main(int argc, char *argv[]) {
         dt = 0.0;
 
         // compute the largest change and copy T_new to T
-        #pragma omp target map(dt)
-        #pragma omp teams distribute parallel for collapse(2) reduction(max:dt)
         for(i = 1; i <= GRIDX; i++){
             for(j = 1; j <= GRIDY; j++){
 	      dt = MAX( fabs(T_new[i][j]-T[i][j]), dt);
