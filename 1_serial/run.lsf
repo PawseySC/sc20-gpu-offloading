@@ -1,0 +1,13 @@
+#!/bin/bash
+#BSUB -J laplace
+#BSUB -W 5
+#BSUB -nnodes 1
+module load gcc
+# Compile
+echo "Compiling code"
+make clean
+make
+# Run
+echo 
+echo "Running code"
+jsrun -n 1 -r 1 -a 1 -g 1 ./laplace 4000

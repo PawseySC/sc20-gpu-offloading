@@ -1,0 +1,13 @@
+#!/bin/bash
+#BSUB -J laplace
+#BSUB -W 5
+#BSUB -nnodes 1
+module load pgi
+module load cuda
+# Compile
+echo "Compiling code"
+make clean
+make
+# Run
+echo "Running code"
+jsrun --smpiargs="none" -n 1 -r 1 -a 1 -g 1 nvprof ./laplace_acc 4000

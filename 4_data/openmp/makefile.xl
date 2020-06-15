@@ -1,0 +1,14 @@
+CC=xlc
+CFLAGS=-O2 -qsmp=omp -qoffload
+LIBS=
+OBJ=laplace_mp.o
+TARGET=laplace_mp
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(TARGET): $(OBJ)
+	$(CC) $(CFLAGS) $(LIBS) -o $@ $^
+
+clean:
+	rm -f $(TARGET) *.o

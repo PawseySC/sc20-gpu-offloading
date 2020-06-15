@@ -1,0 +1,18 @@
+#!/bin/bash
+#BSUB -J laplace
+#BSUB -W 5
+#BSUB -nnodes 1
+module load gcc
+# Compile
+echo "Compiling code"
+make clean
+make
+# Run
+echo "Running code"
+cd $MEMBERWORK/`echo $LSB_PROJECT_NAME | tr '[:upper:]' '[:lower:]'`
+cp $LS_SUBCWD/laplace .
+jsrun -n 1 -r 1 -a 1 -g 1 ./laplace 4000
+# Generate profiling report
+echo
+echo "Generating profiling report"
+gprof -lbp laplace gmon.out

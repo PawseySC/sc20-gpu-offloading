@@ -1,0 +1,13 @@
+#!/bin/bash
+#BSUB -J laplace
+#BSUB -W 5
+#BSUB -nnodes 1
+module load pgi
+# Compile
+echo "Compiling code"
+make clean
+make
+# Run
+echo "Running code"
+export OMP_NUM_THREADS=2
+jsrun --smpiargs="none" -n 1 -r 1 -a 1 -c 2 -g 2 ./laplace_acc 4000

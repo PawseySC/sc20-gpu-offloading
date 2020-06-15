@@ -1,0 +1,13 @@
+#!/bin/bash
+#BSUB -J laplace
+#BSUB -W 5
+#BSUB -nnodes 1
+module load xl/16.1.1-7
+module load cuda
+# Compile
+echo "Compiling code"
+make clean -f makefile.xl
+make -f makefile.xl
+# Run
+echo "Running code"
+jsrun --smpiargs="none" -n 1 -a 1 -c 1 -g 1 nvprof ./laplace_mp 4000
