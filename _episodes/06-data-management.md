@@ -114,7 +114,7 @@ What we notice is that the code runs much faster now and as can be seen from the
 
 ## Key differences
 
-Although we claim that we have significantly reduced the number of data transfers, the *nvprof* report is still indicating that there was around 2250*2 data transfers. Those transfers are related to the use of *dt* in the second loop nest. This scalar variable needs to be copied in and out in every iteration of the algorithm. As mentioned before, there is a small difference on how the *dt* variable is declared in OpenACC and OpenMP versions of the code. In the case of OpenMP we need to be more prescriptive and specify the type of data transfers for the *dt* variable. This is related to differences in how scalar variables are treated in *kernels* and *target* constructs.
+Although we claim that we have significantly reduced the number of data transfers, the *nvprof* report is still indicating that there was around 2250 x 2 data transfers. Those transfers are related to the use of *dt* in the second loop nest. This scalar variable needs to be copied in and out in every iteration of the algorithm. As mentioned before, there is a small difference on how the *dt* variable is declared in OpenACC and OpenMP versions of the code. In the case of OpenMP we need to be more prescriptive and specify the type of data transfers for the *dt* variable. This is related to differences in how scalar variables are treated in *kernels* and *target* constructs.
 
 
 ### Default scalar mapping

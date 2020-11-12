@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="last-modified" content="2020-04-30 20:44:13 +0800">
+    <meta http-equiv="last-modified" content="2020-11-12 15:54:58 +0800">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- meta "search-domain" used for google site search function google_search() -->
     <meta name="search-domain" value="">
@@ -309,7 +309,7 @@
 
 <h2 id="key-differences">Key differences</h2>
 
-<p>Although we claim that we have significantly reduced the number of data transfers, the <em>nvprof</em> report is still indicating that there was around 2250<em>2 data transfers. Those transfers are related to the use of *dt</em> in the second loop nest. This scalar variable needs to be copied in and out in every iteration of the algorithm. As mentioned before, there is a small difference on how the <em>dt</em> variable is declared in OpenACC and OpenMP versions of the code. In the case of OpenMP we need to be more prescriptive and specify the type of data transfers for the <em>dt</em> variable. This is related to differences in how scalar variables are treated in <em>kernels</em> and <em>target</em> constructs.</p>
+<p>Although we claim that we have significantly reduced the number of data transfers, the <em>nvprof</em> report is still indicating that there was around 2250 x 2 data transfers. Those transfers are related to the use of <em>dt</em> in the second loop nest. This scalar variable needs to be copied in and out in every iteration of the algorithm. As mentioned before, there is a small difference on how the <em>dt</em> variable is declared in OpenACC and OpenMP versions of the code. In the case of OpenMP we need to be more prescriptive and specify the type of data transfers for the <em>dt</em> variable. This is related to differences in how scalar variables are treated in <em>kernels</em> and <em>target</em> constructs.</p>
 
 <h3 id="default-scalar-mapping">Default scalar mapping</h3>
 
