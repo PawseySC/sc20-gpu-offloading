@@ -7,12 +7,16 @@
 #SBATCH --export=NONE
 module purge
 module load cascadelake
-module load clang
+module load gcc/9.2.0
 # Compile
 echo "Compiling code"
-srun --export=all -u -n 1 make -f makefile.clang clean
-srun --export=all -u -n 1 make -f makefile.clang
-# Run
+srun --export=all -u -n 1 make -f makefile.gcc clean
+srun --export=all -u -n 1 make -f makefile.gcc
+# Run C code
 echo
-echo "Running code"
-srun --export=all -u -n 1 ./laplace_mp 4000
+echo "Running C code"
+srun --export=all -u -n 1 ./laplace 4000
+# Run Fortran code
+echo
+echo "Running Fortran code"
+srun --export=all -u -n 1 ./laplacef 4000

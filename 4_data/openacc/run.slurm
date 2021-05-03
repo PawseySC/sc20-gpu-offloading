@@ -13,7 +13,12 @@ module load cuda
 echo "Compiling code"
 srun --export=all -u -n 1 make clean
 srun --export=all -u -n 1 make
-# Run
+# Run C code
 echo
-echo "Running code"
-srun --export=all -u -n 1 nvprof ./laplace_acc 4000
+echo "Running C code"
+srun --export=all -u -n 1 nvprof ./laplace 4000
+# Run Fortran code
+echo
+echo "Running Fortran code"
+srun --export=all -u -n 1 nvprof ./laplacef 4000
+

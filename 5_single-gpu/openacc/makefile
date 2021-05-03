@@ -1,14 +1,24 @@
 CC=pgcc
+F90=pgf90
 CFLAGS=-O3 -acc -Minfo=accel
+FFLAGS=-O3 -acc -Minfo=accel
 LIBS=
-OBJ=laplace_acc.o
-TARGET=laplace_acc
+OBJ=laplace.o,laplacef.o
+TARGET= laplace laplacef
 
-%.o: %.c
+all: $(TARGET)
+
+laplace.o: laplace.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(TARGET): $(OBJ)
+laplacef.o: laplace.f90
+	$(F90) $(FFLAGS) -c -o $@ $<
+
+laplace: laplace.o
 	$(CC) $(CFLAGS) $(LIBS) -o $@ $^
+
+laplacef: laplacef.o
+	$(F90) $(FFLAGS) $(LIBS) -o $@ $^
 
 clean:
 	rm -f $(TARGET) *.o
