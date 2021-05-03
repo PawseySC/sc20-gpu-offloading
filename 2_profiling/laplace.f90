@@ -13,11 +13,11 @@
        integer start_time,stop_time,clock_rate
        real elapsed_time
 
-       if (iargc().ne.1) then
+       if (command_argument_count().ne.1) then
          call getarg(0, arg)
          print *, 'Usage ',trim(arg),' number_of_iterations'
        else 
-         call GETARG(1,arg)
+         call getarg(1,arg)
          read(arg,*)  max_iterations
        end if 
 
